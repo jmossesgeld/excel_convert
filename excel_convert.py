@@ -41,9 +41,7 @@ class Converter:
 
     def slsp(self):
         try:
-            self.ws['B2'].number_format = "m/dd/yyyy"
-            self.PERIOD = datetime.datetime.strftime(
-                f"{self.ws['B2'].value}/{calendar.monthrange(self.ws['B3'].value, self.ws['B2'].value)[1]}/{self.ws['B3'].value}", "%m/%d/%Y")
+            self.PERIOD = f"{self.ws['B2'].value:0>2d}/{calendar.monthrange(self.ws['B3'].value, self.ws['B2'].value)[1]}/{self.ws['B3'].value}"
         except (ValueError, TypeError):
             self.has_error = True
             self.error_msgs += 'Please fill-up PERIOD<br>'
