@@ -2,6 +2,7 @@ import pandas as pd
 import datetime
 from openpyxl import load_workbook
 import os
+import calendar
 
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 dat_file = os.path.join(THIS_FOLDER, 'result.DAT')
@@ -41,7 +42,8 @@ class Converter:
     def slsp(self):
         try:
             self.ws['B2'].number_format = "m/dd/yyyy"
-            self.PERIOD = datetime.datetime.strftime(self.ws['B2'].value, "%m/%d/%Y")
+            self.PERIOD = datetime.datetime.strftime(
+                f"{self.ws['B2'].value}/{calendar.monthrange(self.ws['B3'].value, self.ws['B2'].value)[1]}/{self.ws['B3'].value}", "%m/%d/%Y")
         except (ValueError, TypeError):
             self.has_error = True
             self.error_msgs += 'Please fill-up PERIOD<br>'
@@ -95,7 +97,7 @@ class Converter:
             return self.error_msgs
         else:
             with open(dat_file, 'w') as dat:
-                dat.write(f'H,P,"{self.TIN}","{self.NAME}","","","","{self.TRADE}","{self.ADDRESS1}","{self.ADDRESS2}",{EXEMPT},{ZERO_RATED},{SERVICES},{CAPITAL_GOODS},{GOODS},{INPUT_VAT},{CREDITABLE},{NON_CREDITABLE},{self.RDO_CODE},{self.PERIOD},{self.CALENDAR}\n')
+                dat.write(f'H,P,"{self.TIN}","{self.NAME}","","","","{self.TRADE}","{self.ADDRESS1}","{self.ADDRESS2}",{EXEMPT},{ZERO_RATED},{SERVICES},{CAPITAL_GOODS},{GOODS},{INPUT_VAT},{CREDITABLE},{NON_CREDITABLE},{self.RDO_CODE},{self.PERIOD},12\n')
                 dat.writelines([parse(line) for line in df.values])
 
             dest_path = f'{self.TIN}P{self.PERIOD[:2]}{self.PERIOD[6:10]}.DAT'
@@ -108,7 +110,8 @@ class Converter:
         self.PERIOD = f"{self.ws['B3'].value:0>2d}/{self.ws['B2'].value}"
 
         df = pd.read_excel(self.file, 'DATA').fillna(0)
-        df['PAYEE REGISTERED NAME'] = df['PAYEE REGISTERED NAME'].replace(0, '')
+        df['PAYEE REGISTERED NAME'] = df['PAYEE REGISTERED NAME'].replace(
+            0, '')
 
         def parse(line, idx):
             try:
@@ -136,14 +139,16 @@ class Converter:
             return self.error_msgs
         else:
             with open(dat_file, 'w') as dat:
-                dat.write(f'HQAP,H1601EQ,{self.TIN},{BRANCH_CODE},"{self.NAME}",{self.PERIOD},{self.RDO_CODE}\n')
+                dat.write(
+                    f'HQAP,H1601EQ,{self.TIN},{BRANCH_CODE},"{self.NAME}",{self.PERIOD},{self.RDO_CODE}\n')
 
                 data = []
                 for i in range(len(df.values)):
                     data.append(parse(df.values[i], i))
                 dat.writelines(data)
 
-                dat.write(f'C1,1601EQ,{self.TIN},{BRANCH_CODE},{self.PERIOD},{TOTAL_PAYMENTS},{TOTAL_WITHHELD}\n')
+                dat.write(
+                    f'C1,1601EQ,{self.TIN},{BRANCH_CODE},{self.PERIOD},{TOTAL_PAYMENTS},{TOTAL_WITHHELD}\n')
 
             dest_path = f'{self.TIN}{BRANCH_CODE}{self.PERIOD[:2]}{self.PERIOD[3:7]}1601EQ.DAT'
             return dest_path
